@@ -2,6 +2,7 @@ package main
 
 import (
 	"calar-go/converter"
+	"calar-go/parser"
 	"calar-go/tracto"
 	"fmt"
 	"log"
@@ -12,14 +13,16 @@ import (
 
 func main() {
 	var schedule tracto.Schedule
-	education := "full"
-	department := "knt"
-	group := "351"
-	tracto.ParseJson(&schedule, education, department, group)
+	var cfg parser.Config
+	parser.ParseArguments(&cfg)
+	tracto.ParseJson(&schedule, cfg)
+	for _, s := range cfg.Subgroups {
+		fmt.Printf("%s\n", s)
+	}
 	iCalString := converter.MakeCalendar(schedule, &ics.Calendar{})
 
 	file, err :=
-		os.OpenFile(fmt.Sprintf("%s_%s.ics", department, group),
+		os.OpenFile(fmt.Sprintf("%s_%s.ics", cfg.Department, cfg.Group),
 			os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		log.Fatal(err)

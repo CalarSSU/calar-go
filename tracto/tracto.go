@@ -1,6 +1,7 @@
 package tracto
 
 import (
+	"calar-go/parser"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,9 +9,9 @@ import (
 	"net/http"
 )
 
-func ParseJson(result *Schedule, tokenForm, tokenDepartment, tokenGroup string) {
+func ParseJson(result *Schedule, cfg parser.Config) {
 	rsp, err := http.Get(fmt.Sprintf(
-		"%s/%s/%s/%s", scribaToken, tokenForm, tokenDepartment, tokenGroup))
+		"%s/%s/%s/%s", scribaToken, cfg.Education, cfg.Department, cfg.Group))
 
 	if err != nil {
 		log.Fatalln(err)
