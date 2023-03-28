@@ -16,6 +16,7 @@ func main() {
 	var cfg parser.Config
 	parser.ParseArguments(&cfg)
 	tracto.ParseJson(&schedule, cfg)
+	fmt.Printf("%d\n", len(cfg.Subgroups))
 	for _, s := range cfg.Subgroups {
 		fmt.Printf("%s\n", s)
 	}

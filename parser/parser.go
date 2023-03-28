@@ -19,13 +19,14 @@ func ParseArguments(cfg *Config) {
 			cfg.Department, _ = cmd.Flags().GetString("department")
 			cfg.Education, _ = cmd.Flags().GetString("education")
 			cfg.Group, _ = cmd.Flags().GetString("group")
-			cfg.Subgroups, _ = cmd.Flags().GetStringArray("subgroups")
+			cfg.Subgroups, _ = cmd.Flags().GetStringSlice("subgroups")
 		},
 	}
+
 	cmdConfig.Flags().StringP("department", "d", "", "department token")
 	cmdConfig.Flags().StringP("education", "e", "full", "type of eduction")
 	cmdConfig.Flags().StringP("group", "g", "", "group number")
-	cmdConfig.Flags().StringArrayP("subgroups", "s", []string{},
-		"list of sobgroups")
+	cmdConfig.Flags().StringSliceP("subgroups", "s", []string{},
+		"list of subgroups")
 	cmdConfig.Execute()
 }
