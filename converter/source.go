@@ -7,5 +7,14 @@ const semesterDayBegin = 1
 const semesterDayEnd = 31
 const firstSemesterMonthEnd = time.January
 const secondSemesterMonthBegin = time.February
-const secondSemesterMonthEnd = time.June
+const secondSemesterMonthEnd = time.May
 const timeZone = "Europe/Saratov"
+
+func Contains(s []string, e string) bool {
+	for _, v := range s {
+		if v == e {
+			return true
+		}
+	}
+	return false
+}

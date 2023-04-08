@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	ics "github.com/arran4/golang-ical"
 )
@@ -16,14 +17,12 @@ func main() {
 	var cfg parser.Config
 	parser.ParseArguments(&cfg)
 	tracto.ParseJson(&schedule, cfg)
-	fmt.Printf("%d\n", len(cfg.Subgroups))
-	for _, s := range cfg.Subgroups {
-		fmt.Printf("%s\n", s)
-	}
-	iCalString := converter.MakeCalendar(schedule, &ics.Calendar{})
+	iCalString := converter.MakeCalendar(cfg, schedule, &ics.Calendar{})
 
 	file, err :=
-		os.OpenFile(fmt.Sprintf("%s_%s.ics", cfg.Department, cfg.Group),
+		os.OpenFile(
+			fmt.Sprintf("%s_%s_%s.ics", cfg.Department, cfg.Group,
+				strings.Join(cfg.Subgroups, "_")),
 			os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		log.Fatal(err)
