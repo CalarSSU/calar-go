@@ -26,8 +26,8 @@ func MakerRule(event *ics.VEvent, curTime time.Time, lesson tracto.Lesson,
 
 	rRule := fmt.Sprintf("FREQ=WEEKLY;INTERVAL=%d;UNTIL=%s",
 		interval, rRuleEnd)
-	event.AddRrule(rRule)
 
+	event.AddRrule(rRule)
 }
 
 func makeLessonTime(event *ics.VEvent, curTime time.Time, lesson tracto.Lesson,
@@ -59,13 +59,14 @@ func makeLessonTime(event *ics.VEvent, curTime time.Time, lesson tracto.Lesson,
 
 	MakerRule(event, curTime, lesson, semesterEnd, semesterDayEnd)
 }
+
 func MakeCalendar(request parser.Request, schedule tracto.Schedule,
 	cal *ics.Calendar) string {
 	loc, _ := time.LoadLocation(timeZone)
 	curTime := time.Now().In(loc)
 	for _, lesson := range schedule.Lessons {
 		if (len(request.Subgroups) == 0 ||
-			Contains(request.Subgroups, lesson.Subgroup) ||
+			Contains(request.Subgroups, strings.Trim(lesson.Subgroup, " ")) ||
 			"" == lesson.Subgroup) &&
 			(!strings.Contains(lesson.Name, translatorSubstr) ||
 				request.Translator) {
