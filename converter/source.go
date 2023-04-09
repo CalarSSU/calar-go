@@ -9,6 +9,7 @@ const firstSemesterMonthEnd = time.January
 const secondSemesterMonthBegin = time.February
 const secondSemesterMonthEnd = time.May
 const timeZone = "Europe/Saratov"
+const translatorSubstr = "перевод."
 
 func Contains(s []string, e string) bool {
 	for _, v := range s {

@@ -9,9 +9,10 @@ import (
 	"net/http"
 )
 
-func ParseJson(result *Schedule, cfg parser.Config) {
+func ParseJson(result *Schedule, request parser.Request) {
 	rsp, err := http.Get(fmt.Sprintf(
-		"%s/%s/%s/%s", scribaToken, cfg.Education, cfg.Department, cfg.Group))
+		"%s/%s/%s/%s", scribaToken, request.Education, request.Department,
+		request.Group))
 
 	if err != nil {
 		log.Fatalln(err)

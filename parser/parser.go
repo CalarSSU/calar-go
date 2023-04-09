@@ -4,29 +4,33 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Config struct {
+type Request struct {
 	Department string
 	Education  string
 	Group      string
+	Translator bool
 	Subgroups  []string
 }
 
-func ParseArguments(cfg *Config) {
-	var cmdConfig = &cobra.Command{
+func ParseArguments(request *Request) {
+	var cmdRequest = &cobra.Command{
 		Use:   "",
 		Short: "calar arguments",
 		Run: func(cmd *cobra.Command, args []string) {
-			cfg.Department, _ = cmd.Flags().GetString("department")
-			cfg.Education, _ = cmd.Flags().GetString("education")
-			cfg.Group, _ = cmd.Flags().GetString("group")
-			cfg.Subgroups, _ = cmd.Flags().GetStringSlice("subgroups")
+			request.Department, _ = cmd.Flags().GetString("department")
+			request.Education, _ = cmd.Flags().GetString("education")
+			request.Group, _ = cmd.Flags().GetString("group")
+			request.Subgroups, _ = cmd.Flags().GetStringSlice("subgroups")
+			request.Translator, _ = cmd.Flags().GetBool("translator")
 		},
 	}
 
-	cmdConfig.Flags().StringP("department", "d", "", "department token")
-	cmdConfig.Flags().StringP("education", "e", "full", "type of eduction")
-	cmdConfig.Flags().StringP("group", "g", "", "group number")
-	cmdConfig.Flags().StringSliceP("subgroups", "s", []string{},
+	cmdRequest.Flags().StringP("department", "d", "", "department token")
+	cmdRequest.Flags().StringP("education", "e", "full", "type of eduction")
+	cmdRequest.Flags().StringP("group", "g", "", "group number")
+	cmdRequest.Flags().StringSliceP("subgroups", "s", []string{},
 		"list of subgroups")
-	cmdConfig.Execute()
+	cmdRequest.Flags().BoolP("translator", "t", false,
+		"additional education")
+	cmdRequest.Execute()
 }

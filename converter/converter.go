@@ -4,6 +4,7 @@ import (
 	"calar-go/parser"
 	"calar-go/tracto"
 	"fmt"
+	"strings"
 	"time"
 
 	ics "github.com/arran4/golang-ical"
@@ -58,13 +59,16 @@ func makeLessonTime(event *ics.VEvent, curTime time.Time, lesson tracto.Lesson,
 
 	MakerRule(event, curTime, lesson, semesterEnd, semesterDayEnd)
 }
-func MakeCalendar(cfg parser.Config, schedule tracto.Schedule,
+func MakeCalendar(request parser.Request, schedule tracto.Schedule,
 	cal *ics.Calendar) string {
 	loc, _ := time.LoadLocation(timeZone)
 	curTime := time.Now().In(loc)
 	for _, lesson := range schedule.Lessons {
-		if Contains(cfg.Subgroups, lesson.Subgroup) ||
-			"" == lesson.Subgroup {
+		if (len(request.Subgroups) == 0 ||
+			Contains(request.Subgroups, lesson.Subgroup) ||
+			"" == lesson.Subgroup) &&
+			(!strings.Contains(lesson.Name, translatorSubstr) ||
+				request.Translator) {
 			event := cal.AddEvent(fmt.Sprintf("%d", lesson.Id))
 			summary := fmt.Sprintf("%s: %s", lesson.Name, lesson.LessonType)
 
@@ -87,5 +91,6 @@ func MakeCalendar(cfg parser.Config, schedule tracto.Schedule,
 			}
 		}
 	}
-	return cal.Serialize()
+	calSerialaze := cal.Serialize()
+	return calSerialaze
 }

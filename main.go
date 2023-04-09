@@ -14,15 +14,20 @@ import (
 
 func main() {
 	var schedule tracto.Schedule
-	var cfg parser.Config
-	parser.ParseArguments(&cfg)
-	tracto.ParseJson(&schedule, cfg)
-	iCalString := converter.MakeCalendar(cfg, schedule, &ics.Calendar{})
+	var request parser.Request
+	parser.ParseArguments(&request)
+	tracto.ParseJson(&schedule, request)
+	iCalString := converter.MakeCalendar(request, schedule, &ics.Calendar{})
+
+	var isTranslator string
+	if request.Translator {
+		isTranslator = "translator"
+	}
 
 	file, err :=
 		os.OpenFile(
-			fmt.Sprintf("%s_%s_%s.ics", cfg.Department, cfg.Group,
-				strings.Join(cfg.Subgroups, "_")),
+			fmt.Sprintf("%s_%s_%s_%s.ics", request.Department, request.Group,
+				strings.Join(request.Subgroups, "_"), isTranslator),
 			os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		log.Fatal(err)
