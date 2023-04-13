@@ -12,9 +12,10 @@ type Request struct {
 	Subgroups  []string
 }
 
-func ParseArguments(request *Request) {
+func ParseArguments(request *Request) error {
+	// var retError error
 	var cmdRequest = &cobra.Command{
-		Use:   "",
+		Use:   "./calar-go",
 		Short: "calar arguments",
 		Run: func(cmd *cobra.Command, args []string) {
 			request.Department, _ = cmd.Flags().GetString("department")
@@ -24,7 +25,6 @@ func ParseArguments(request *Request) {
 			request.Translator, _ = cmd.Flags().GetBool("translator")
 		},
 	}
-
 	cmdRequest.Flags().StringP("department", "d", "", "department token")
 	cmdRequest.Flags().StringP("education", "e", "full", "type of eduction")
 	cmdRequest.Flags().StringP("group", "g", "", "group number")
@@ -32,5 +32,6 @@ func ParseArguments(request *Request) {
 		"list of subgroups")
 	cmdRequest.Flags().BoolP("translator", "t", false,
 		"additional education")
-	cmdRequest.Execute()
+	return cmdRequest.Execute()
+
 }

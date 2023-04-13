@@ -15,9 +15,10 @@ import (
 func main() {
 	var schedule tracto.Schedule
 	var request parser.Request
-	parser.ParseArguments(&request)
+	err := parser.ParseArguments(&request)
+	fmt.Println(err)
 	tracto.ParseJson(&schedule, request)
-	iCalString := converter.MakeCalendar(request, schedule, &ics.Calendar{})
+	iCalString := converter.MakeCalendar(&request, &schedule, &ics.Calendar{})
 
 	var isTranslator string
 	if request.Translator {

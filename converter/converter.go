@@ -10,7 +10,7 @@ import (
 	ics "github.com/arran4/golang-ical"
 )
 
-func MakerRule(event *ics.VEvent, curTime time.Time, lesson tracto.Lesson,
+func makerRule(event *ics.VEvent, curTime *time.Time, lesson *tracto.Lesson,
 	semesterEnd time.Month, semesterDayEnd int) {
 	lastLessonDate := time.Date(curTime.Year(), semesterEnd,
 		semesterDayEnd, 23, 59, 59, 0, curTime.Location())
@@ -30,9 +30,9 @@ func MakerRule(event *ics.VEvent, curTime time.Time, lesson tracto.Lesson,
 	event.AddRrule(rRule)
 }
 
-func makeLessonTime(event *ics.VEvent, curTime time.Time, lesson tracto.Lesson,
-	semesterBegin, semesterEnd time.Month, semesterDayBegin,
-	semesterDayEnd int) {
+func makeLessonTime(event *ics.VEvent, curTime *time.Time,
+	lesson *tracto.Lesson, semesterBegin, semesterEnd time.Month,
+	semesterDayBegin, semesterDayEnd int) {
 	firstLessonDate := time.Date(curTime.Year(), semesterBegin,
 		semesterDayBegin, 0, 0, 0, 0, curTime.Location())
 
@@ -57,19 +57,19 @@ func makeLessonTime(event *ics.VEvent, curTime time.Time, lesson tracto.Lesson,
 	event.SetStartAt(lessonTimeBegin)
 	event.SetEndAt(lessonTimeEnd)
 
-	MakerRule(event, curTime, lesson, semesterEnd, semesterDayEnd)
+	makerRule(event, curTime, lesson, semesterEnd, semesterDayEnd)
 }
 
-func MakeCalendar(request parser.Request, schedule tracto.Schedule,
+func MakeCalendar(request *parser.Request, schedule *tracto.Schedule,
 	cal *ics.Calendar) string {
 	loc, _ := time.LoadLocation(timeZone)
 	curTime := time.Now().In(loc)
 	for _, lesson := range schedule.Lessons {
-		if (len(request.Subgroups) == 0 ||
-			Contains(request.Subgroups, strings.Trim(lesson.Subgroup, " ")) ||
-			"" == lesson.Subgroup) &&
-			(!strings.Contains(lesson.Name, translatorSubstr) ||
-				request.Translator) {
+		isSubgr :=
+			Contains(request.Subgroups, strings.Trim(lesson.Subgroup, " "))
+		isTranslatorLesson := strings.Contains(lesson.Name, translatorSubstr)
+		if (len(request.Subgroups) == 0 || isSubgr || "" == lesson.Subgroup) &&
+			(!isTranslatorLesson || request.Translator) {
 			event := cal.AddEvent(fmt.Sprintf("%d", lesson.Id))
 			summary := fmt.Sprintf("%s: %s", lesson.Name, lesson.LessonType)
 
@@ -84,10 +84,10 @@ func MakeCalendar(request parser.Request, schedule tracto.Schedule,
 
 			if (curTime.Month() >= firstSemesterMonthBegin) ||
 				(curTime.Month() <= firstSemesterMonthEnd) {
-				makeLessonTime(event, curTime, lesson, firstSemesterMonthBegin,
+				makeLessonTime(event, &curTime, &lesson, firstSemesterMonthBegin,
 					firstSemesterMonthEnd, semesterDayBegin, semesterDayEnd)
 			} else {
-				makeLessonTime(event, curTime, lesson, secondSemesterMonthBegin,
+				makeLessonTime(event, &curTime, &lesson, secondSemesterMonthBegin,
 					secondSemesterMonthEnd, semesterDayBegin, semesterDayEnd)
 			}
 		}
