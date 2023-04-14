@@ -16,7 +16,10 @@ func main() {
 	var schedule tracto.Schedule
 	var request parser.Request
 	err := parser.ParseArguments(&request)
-	fmt.Println(err)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(2)
+	}
 	tracto.ParseJson(&schedule, request)
 	iCalString := converter.MakeCalendar(&request, &schedule, &ics.Calendar{})
 

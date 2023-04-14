@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +15,6 @@ type Request struct {
 }
 
 func ParseArguments(request *Request) error {
-	// var retError error
 	var cmdRequest = &cobra.Command{
 		Use:   "./calar-go",
 		Short: "calar arguments",
@@ -32,6 +33,10 @@ func ParseArguments(request *Request) error {
 		"list of subgroups")
 	cmdRequest.Flags().BoolP("translator", "t", false,
 		"additional education")
-	return cmdRequest.Execute()
-
+	cmdRequest.Execute()
+	if "" == request.Department || "" == request.Group {
+		cmdRequest.Help()
+		return errors.New("empty arguments")
+	}
+	return nil
 }
