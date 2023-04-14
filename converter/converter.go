@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"calar-go/parser"
 	"calar-go/tracto"
 	"fmt"
 	"strings"
@@ -9,65 +10,88 @@ import (
 	ics "github.com/arran4/golang-ical"
 )
 
-func MakeCalendar(schedule tracto.Schedule, cal *ics.Calendar) string {
+func makerRule(event *ics.VEvent, curTime *time.Time, lesson *tracto.Lesson,
+	semesterEnd time.Month, semesterDayEnd int) {
+	lastLessonDate := time.Date(curTime.Year(), semesterEnd,
+		semesterDayEnd, 23, 59, 59, 0, curTime.Location())
+	rRuleEnd := lastLessonDate.UTC().Format("20060102T150405Z")
+
+	var interval int
+	switch lesson.WeekType {
+	case "FULL":
+		interval = 1
+	default:
+		interval = 2
+	}
+
+	rRule := fmt.Sprintf("FREQ=WEEKLY;INTERVAL=%d;UNTIL=%s",
+		interval, rRuleEnd)
+
+	event.AddRrule(rRule)
+}
+
+func makeLessonTime(event *ics.VEvent, curTime *time.Time,
+	lesson *tracto.Lesson, semesterBegin, semesterEnd time.Month,
+	semesterDayBegin, semesterDayEnd int) {
+	firstLessonDate := time.Date(curTime.Year(), semesterBegin,
+		semesterDayBegin, 0, 0, 0, 0, curTime.Location())
+
+	firstLessonDate =
+		firstLessonDate.AddDate(0, 0,
+			(lesson.Day.Id - int(firstLessonDate.Weekday())))
+
+	if "DENOM" == lesson.WeekType {
+		firstLessonDate = firstLessonDate.Add(time.Hour * 24 * 7)
+	}
+
+	lessonTimeBegin :=
+		firstLessonDate.Add(time.Hour*
+			time.Duration(lesson.LessonTime.HourStart) +
+			time.Minute*time.Duration(lesson.LessonTime.MinuteStart))
+
+	lessonTimeEnd :=
+		firstLessonDate.Add(time.Hour*
+			time.Duration(lesson.LessonTime.HourEnd) +
+			time.Minute*time.Duration(lesson.LessonTime.MinuteEnd))
+
+	event.SetStartAt(lessonTimeBegin)
+	event.SetEndAt(lessonTimeEnd)
+
+	makerRule(event, curTime, lesson, semesterEnd, semesterDayEnd)
+}
+
+func MakeCalendar(request *parser.Request, schedule *tracto.Schedule,
+	cal *ics.Calendar) string {
 	loc, _ := time.LoadLocation(timeZone)
 	curTime := time.Now().In(loc)
-
 	for _, lesson := range schedule.Lessons {
-		event := cal.AddEvent(fmt.Sprintf("%d", lesson.Id))
-		summary := fmt.Sprintf("%s: %s", lesson.Name, lesson.LessonType)
-		if lesson.Subgroup != "" {
-			summary =
-				fmt.Sprintf("(%s) %s",
-					strings.ReplaceAll(strings.Trim(lesson.Subgroup, " ."),
-						" ", "_"),
-					summary)
+		isSubgr :=
+			Contains(request.Subgroups, strings.Trim(lesson.Subgroup, " "))
+		isTranslatorLesson := strings.Contains(lesson.Name, translatorSubstr)
+		if (len(request.Subgroups) == 0 || isSubgr || "" == lesson.Subgroup) &&
+			(!isTranslatorLesson || request.Translator) {
+			event := cal.AddEvent(fmt.Sprintf("%d", lesson.Id))
+			summary := fmt.Sprintf("%s: %s", lesson.Name, lesson.LessonType)
+
+			event.SetSummary(summary)
+
+			teacher :=
+				fmt.Sprintf("%s %s %s", lesson.Teacher.Surname,
+					lesson.Teacher.Name, lesson.Teacher.Patronymic)
+			event.SetDescription(teacher)
+
+			event.SetLocation(lesson.Place)
+
+			if (curTime.Month() >= firstSemesterMonthBegin) ||
+				(curTime.Month() <= firstSemesterMonthEnd) {
+				makeLessonTime(event, &curTime, &lesson, firstSemesterMonthBegin,
+					firstSemesterMonthEnd, semesterDayBegin, semesterDayEnd)
+			} else {
+				makeLessonTime(event, &curTime, &lesson, secondSemesterMonthBegin,
+					secondSemesterMonthEnd, semesterDayBegin, semesterDayEnd)
+			}
 		}
-		event.SetSummary(summary)
-
-		teacher :=
-			fmt.Sprintf("%s %s %s", lesson.Teacher.Surname,
-				lesson.Teacher.Name, lesson.Teacher.Patronymic)
-		event.SetDescription(teacher)
-
-		event.SetLocation(lesson.Place)
-
-		var lessonTimeBegin, lessonTimeEnd, semesterBegin time.Time
-		if (curTime.Month() >= firstSemesterMonthBegin) ||
-			(curTime.Month() <= firstSemesterMonthEnd) {
-			semesterBegin =
-				semesterBegin.AddDate(0, 0,
-					(lesson.Day.Id - int(semesterBegin.Weekday())))
-
-			lessonTimeBegin =
-				semesterBegin.Add(time.Hour*
-					time.Duration(lesson.LessonTime.HourStart) +
-					time.Minute*time.Duration(lesson.LessonTime.MinuteStart))
-
-			lessonTimeEnd =
-				semesterBegin.Add(time.Hour*
-					time.Duration(lesson.LessonTime.HourEnd) +
-					time.Minute*time.Duration(lesson.LessonTime.MinuteEnd))
-		} else {
-			semesterBegin =
-				time.Date(curTime.Year(), secondSemesterMonthBegin,
-					semesterDayBegin, 0, 0, 0, 0, curTime.Location())
-			semesterBegin =
-				semesterBegin.AddDate(0, 0,
-					(lesson.Day.Id - int(semesterBegin.Weekday())))
-
-			lessonTimeBegin =
-				semesterBegin.Add(time.Hour*
-					time.Duration(lesson.LessonTime.HourStart) +
-					time.Minute*time.Duration(lesson.LessonTime.MinuteStart))
-
-			lessonTimeEnd =
-				semesterBegin.Add(time.Hour*
-					time.Duration(lesson.LessonTime.HourEnd) +
-					time.Minute*time.Duration(lesson.LessonTime.MinuteEnd))
-		}
-		event.SetStartAt(lessonTimeBegin)
-		event.SetEndAt(lessonTimeEnd)
 	}
-	return cal.Serialize()
+	calSerialaze := cal.Serialize()
+	return calSerialaze
 }

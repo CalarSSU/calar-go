@@ -1,6 +1,6 @@
 package tracto
 
-const scribaToken = "https://scribabot.tk/api/v1.0/schedule"
+const scribaToken = "https://scribaproject.space/api/v1.0/schedule"
 
 type Day struct {
 	Id        int

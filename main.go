@@ -2,24 +2,36 @@ package main
 
 import (
 	"calar-go/converter"
+	"calar-go/parser"
 	"calar-go/tracto"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	ics "github.com/arran4/golang-ical"
 )
 
 func main() {
 	var schedule tracto.Schedule
-	education := "full"
-	department := "knt"
-	group := "351"
-	tracto.ParseJson(&schedule, education, department, group)
-	iCalString := converter.MakeCalendar(schedule, &ics.Calendar{})
+	var request parser.Request
+	err := parser.ParseArguments(&request)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(2)
+	}
+	tracto.ParseJson(&schedule, request)
+	iCalString := converter.MakeCalendar(&request, &schedule, &ics.Calendar{})
+
+	var isTranslator string
+	if request.Translator {
+		isTranslator = "translator"
+	}
 
 	file, err :=
-		os.OpenFile(fmt.Sprintf("%s_%s.ics", department, group),
+		os.OpenFile(
+			fmt.Sprintf("%s_%s_%s_%s.ics", request.Department, request.Group,
+				strings.Join(request.Subgroups, "_"), isTranslator),
 			os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		log.Fatal(err)
